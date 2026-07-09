@@ -1,0 +1,33 @@
+{
+  "name": "cherry-bot",
+  "version": "1.0.0",
+  "description": "A helper bot for HFC!",
+  "homepage": "https://github.com/YakimaProgrammer/cherry-bot#readme",
+  "bugs": {
+    "url": "https://github.com/YakimaProgrammer/cherry-bot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YakimaProgrammer/cherry-bot.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "Magnus Fulton",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^26.1.1",
+    "prisma": "^7.8.0",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "dotenv": "^17.4.2"
+  },
+  "type": "module"
+}
