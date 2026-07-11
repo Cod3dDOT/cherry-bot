@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -27,6 +28,7 @@ model Emoji {
   userId        String
   timestamp     DateTime
   guildId       String
+  status        CurrentEmojiStatus?
 
   @@index([userId])
   @@index([guildId])
@@ -51,7 +53,7 @@ model EmojiUsageEvent {
   channelId  String
   guildId    String
 
-  @@index([emojiId])
+  @@index([emojiId, eventId(sort: Desc)])
 }
 
 model UserStatusEvent {
@@ -61,7 +63,7 @@ model UserStatusEvent {
   guildId    String
   status     UserStatus
 
-  @@index([userId, guildId, timestamp(sort: Desc)])
+  @@index([userId, guildId, eventId(sort: Desc)])
 }
 
 model AuditEvent {
@@ -74,4 +76,16 @@ model AuditEvent {
 
   @@index([userId])
   @@index([guildId])
+}
+
+view CurrentEmojiStatus {
+  emojiId   String      @unique
+  status    EmojiStatus
+  emoji     Emoji @relation(fields: [emojiId], references: [emojiId])
+}
+
+view CurrentUserStatus {
+  userId    String
+  guildId   String
+  status    UserStatus
 }
