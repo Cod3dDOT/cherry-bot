@@ -1,13 +1,77 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+enum EmojiStatus {
+  Ok
+  UserDeleted
+  AdminDeleted
+  ServerDeleted
+  Blocked
+  UserLeft
+  Expired
+}
+
+enum UserStatus {
+  Ok
+  Blocked
+}
+
+model Emoji {
+  emojiId       String @id
+  cloudflareId  String
+  userId        String
+  timestamp     DateTime
+  guildId       String
+
+  @@index([userId])
+  @@index([guildId])
+}
+
+model EmojiStatusEvent {
+  eventId    Int    @id @default(autoincrement())
+  emojiId    String
+  timestamp  DateTime
+  userId     String
+  status     EmojiStatus
+
+  @@index([emojiId, timestamp(sort: Desc)])
+  @@index([userId])
+}
+
+model EmojiUsageEvent {
+  eventId    Int    @id @default(autoincrement())
+  emojiId    String
+  timestamp  DateTime
+  userId     String
+  channelId  String
+  guildId    String
+
+  @@index([emojiId])
+}
+
+model UserStatusEvent {
+  eventId    Int @id @default(autoincrement())
+  timestamp  DateTime
+  userId     String
+  guildId    String
+  status     UserStatus
+
+  @@index([userId, guildId, timestamp(sort: Desc)])
+}
+
+model AuditEvent {
+  eventId    Int @id @default(autoincrement())
+  timestamp  DateTime
+  userId     String
+  guildId    String
+  command    String
+  channelId  String
+
+  @@index([userId])
+  @@index([guildId])
 }
