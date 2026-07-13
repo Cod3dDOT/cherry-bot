@@ -1,7 +1,6 @@
 generator client {
   provider        = "prisma-client"
   output          = "../src/generated/prisma"
-  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -27,9 +26,10 @@ model Emoji {
   emojiId       String @id
   cloudflareId  String
   userId        String
-  timestamp     DateTime
+  timestamp     DateTime @default(now())
   guildId       String
-  status        CurrentEmojiStatus?
+  statusEvents  EmojiStatusEvent[]
+  usageEvents   EmojiUsageEvent[]
 
   @@index([userId])
   @@index([guildId])
@@ -38,28 +38,32 @@ model Emoji {
 model EmojiStatusEvent {
   eventId    Int    @id @default(autoincrement())
   emojiId    String
-  timestamp  DateTime
+  timestamp  DateTime @default(now())
   userId     String
   status     EmojiStatus
 
-  @@index([emojiId, timestamp(sort: Desc)])
+  emoji      Emoji @relation(fields: [emojiId], references: [emojiId])
+
+  @@index([emojiId, eventId(sort: Desc)])
   @@index([userId])
 }
 
 model EmojiUsageEvent {
   eventId    Int    @id @default(autoincrement())
   emojiId    String
-  timestamp  DateTime
+  timestamp  DateTime @default(now())
   userId     String
   channelId  String
   guildId    String
+
+  emoji      Emoji @relation(fields: [emojiId], references: [emojiId])
 
   @@index([emojiId, eventId(sort: Desc)])
 }
 
 model UserStatusEvent {
   eventId    Int @id @default(autoincrement())
-  timestamp  DateTime
+  timestamp  DateTime @default(now())
   userId     String
   guildId    String
   status     UserStatus
@@ -69,7 +73,7 @@ model UserStatusEvent {
 
 model AuditEvent {
   eventId    Int @id @default(autoincrement())
-  timestamp  DateTime
+  timestamp  DateTime @default(now())
   userId     String
   guildId    String
   command    String
@@ -79,14 +83,10 @@ model AuditEvent {
   @@index([guildId])
 }
 
-view CurrentEmojiStatus {
-  emojiId   String      @unique
-  status    EmojiStatus
-  emoji     Emoji @relation(fields: [emojiId], references: [emojiId])
-}
-
-view CurrentUserStatus {
-  userId    String
-  guildId   String
-  status    UserStatus
+model Guild {
+  guildId           String @id
+  // How many emoji each user can own
+  emojiPerUserLimit Int
+  // How many seconds before emoji expire
+  emojiExpireTime   Int
 }
