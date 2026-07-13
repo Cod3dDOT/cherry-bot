@@ -1,4 +1,5 @@
-import { Prisma } from "../generated/prisma/client";
+import { EmojiStatus, Prisma } from "../generated/prisma/client";
+import { Emoji } from "../types";
 
 export async function countUserActiveEmoji(
   tx: Prisma.TransactionClient,
@@ -18,6 +19,22 @@ export async function countUserActiveEmoji(
 
   return emojis.filter(({ statusEvents }) => statusEvents[0]?.status === "Ok")
     .length;
+}
+
+export async function pushEmojiStatus(
+  tx: Prisma.TransactionClient,
+  emojiId: string,
+  userId: string,
+  newStatus: EmojiStatus
+) {
+  // You could also do this through the emoji model
+  await tx.emojiStatusEvent.create({
+    data: {
+      emojiId,
+      userId,
+      status: newStatus,
+    },
+  });
 }
 
 export async function createEmoji(
