@@ -1,6 +1,61 @@
 import { EmojiStatus, Prisma } from "../generated/prisma/client";
 import { Emoji } from "../types";
 
+export async function getUserActiveEmoji(
+  tx: Prisma.TransactionClient,
+  guildId: string,
+  userId: string,
+): Promise<Emoji[]> {
+  const emoji = await tx.emoji.findMany({
+    where: { guildId, userId },
+    select: {
+      emojiId: true,
+      cloudflareId: true,
+      statusEvents: {
+        orderBy: { eventId: "desc" },
+        take: 1,
+        select: { status: true },
+      },
+      usageEvents: {
+        orderBy: { eventId: "desc" },
+        take: 1,
+        select: { timestamp: true },
+      },
+      _count: {
+        select: {
+          usageEvents: true,
+        },
+      },
+    },
+  });
+
+  return (
+    emoji
+      .map((e) => ({
+        emojiId: e.emojiId,
+        cloudflareId: e.cloudflareId,
+        status: e.statusEvents.at(0)?.status,
+        usageCount: e._count.usageEvents,
+        lastUsage: e.usageEvents.at(0)?.timestamp,
+      }))
+      .filter((e): e is Emoji => {
+        return !(e.lastUsage == undefined || e.status == undefined);
+      })
+      // Yeah, this could be merged with the previous filter, but that blurs the line a bit for what
+      .filter((e) => e.status === "Ok")
+  );
+}
+
+export async function getEmojiOwner(
+  tx: Prisma.TransactionClient,
+  emojiId: string,
+): Promise<string | undefined> {
+  return (
+    await tx.emoji.findUnique({ where: { emojiId }, select: { userId: true } })
+  )?.userId;
+}
+
+// This could also just call `getUserActiveEmoji` at the expense of trashing a some compute for calculating unused columns
 export async function countUserActiveEmoji(
   tx: Prisma.TransactionClient,
   guildId: string,
