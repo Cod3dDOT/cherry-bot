@@ -43,6 +43,7 @@ export async function createEmoji(
   userId: string,
   emojiId: string,
   cloudflareId: string,
+  channelId: string,
 ) {
   await tx.emoji.create({
     data: {
@@ -54,6 +55,13 @@ export async function createEmoji(
         create: {
           userId,
           status: "Ok",
+        },
+      },
+      usageEvents: {
+        create: {
+          userId,
+          guildId,
+          channelId,
         },
       },
     },

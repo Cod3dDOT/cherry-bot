@@ -96,10 +96,10 @@ export const command: DiscordCommand = {
       await uploadDiscordAttachment(attachment, cloudflareId);
 
       // Persist the emoji to the database
-      await createEmoji(tx, guildId, userId, emoji.id, cloudflareId);
+      await createEmoji(tx, guildId, userId, emoji.id, cloudflareId, interaction.channelId);
 
       // Record an audit event so we know what happened
-      await recordAuditEvent(tx, guildId, userId, `emoji::create(${emojiName})`, interaction.channelId);
+      await recordAuditEvent(tx, guildId, userId, `emoji::create(<:${emojiName}:${emoji.id}>)`, interaction.channelId);
     } catch (e) {
       // The emoji exists in Discord, but we couldn't persist it to DB or to Cloudflare.
       // Unwind and rethrow the error to abort the transaction.
