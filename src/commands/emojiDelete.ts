@@ -1,13 +1,14 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
 import {
   pushEmojiStatus,
   getEmojiOwner,
+  getUserActiveEmoji,
 } from "../models/emoji";
 import { recordAuditEvent } from "../models/audit";
 
 export const command: DiscordCommand = {
-  command: new SlashCommandBuilder()
+  command: new SlashCommandSubcommandBuilder()
     .setName("delete")
     .setDescription(`Removes an emoji from the server.`)
     .addStringOption((opt) =>
@@ -71,8 +72,14 @@ export const command: DiscordCommand = {
       await pushEmojiStatus(tx, discordEmoji.id, userId, "UserDeleted");
 
       // Record an audit event so we know what happened
-      await recordAuditEvent(tx, guildId, userId, `emoji::delete(<:${discordEmoji.name}:${discordEmoji.id}>)`, interaction.channelId);
-      
+      await recordAuditEvent(
+        tx,
+        guildId,
+        userId,
+        `emoji::delete(<:${discordEmoji.name}:${discordEmoji.id}>)`,
+        interaction.channelId,
+      );
+
       await interaction.editReply({
         content: "Successfully deleted the emoji!",
       });
@@ -83,5 +90,38 @@ export const command: DiscordCommand = {
       });
       return;
     }
+  },
+
+  autocomplete: async (interaction, tx) => {
+    const guildId = interaction.guildId;
+
+    if (guildId === null || interaction.guild === null) {
+      await interaction.respond([]);
+      return;
+    }
+
+    const focused = interaction.options.getFocused().toLowerCase();
+
+    const userEmoji = await getUserActiveEmoji(
+      tx,
+      guildId,
+      interaction.user.id,
+    );
+
+    const ownedEmojiIds = new Set(userEmoji.map((emoji) => emoji.emojiId));
+
+    const choices = interaction.guild.emojis.cache
+      .filter(
+        (emoji) =>
+          ownedEmojiIds.has(emoji.id) &&
+          emoji.name.toLowerCase().includes(focused),
+      )
+      .first(25)
+      .map((emoji) => ({
+        name: emoji.name,
+        value: emoji.name.toLowerCase(),
+      }));
+
+    await interaction.respond(choices);
   },
 };

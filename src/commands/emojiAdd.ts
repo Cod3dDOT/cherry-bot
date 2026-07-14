@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
 import { simplePlural } from "../shared";
 import { upsertEmojiLimit } from "../models/guild";
@@ -7,7 +7,7 @@ import { uploadDiscordAttachment } from "../s3";
 import { recordAuditEvent } from "../models/audit";
 
 export const command: DiscordCommand = {
-  command: new SlashCommandBuilder()
+  command: new SlashCommandSubcommandBuilder()
     .setName("add")
     .setDescription(`Adds an emoji to the server.`)
     .addAttachmentOption((opt) =>
@@ -84,8 +84,7 @@ export const command: DiscordCommand = {
     } catch (e) {
       // TODO: what if I give a collided name, an invalid name, etc?
       await interaction.editReply({
-        content:
-          `There was an error creating the emoji. @DEBUG ${e}`,
+        content: `There was an error creating the emoji. @DEBUG ${e}`,
       });
       return;
     }
@@ -96,10 +95,23 @@ export const command: DiscordCommand = {
       await uploadDiscordAttachment(attachment, cloudflareId);
 
       // Persist the emoji to the database
-      await createEmoji(tx, guildId, userId, emoji.id, cloudflareId, interaction.channelId);
+      await createEmoji(
+        tx,
+        guildId,
+        userId,
+        emoji.id,
+        cloudflareId,
+        interaction.channelId,
+      );
 
       // Record an audit event so we know what happened
-      await recordAuditEvent(tx, guildId, userId, `emoji::create(<:${emojiName}:${emoji.id}>)`, interaction.channelId);
+      await recordAuditEvent(
+        tx,
+        guildId,
+        userId,
+        `emoji::create(<:${emojiName}:${emoji.id}>)`,
+        interaction.channelId,
+      );
     } catch (e) {
       // The emoji exists in Discord, but we couldn't persist it to DB or to Cloudflare.
       // Unwind and rethrow the error to abort the transaction.
@@ -107,6 +119,8 @@ export const command: DiscordCommand = {
       throw e;
     }
 
-    await interaction.editReply({ content: `:${emoji.name}: is now an emoji. Use it wisely.` });
+    await interaction.editReply({
+      content: `:${emoji.name}: is now an emoji. Use it wisely.`,
+    });
   },
 };

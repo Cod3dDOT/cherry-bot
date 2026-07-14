@@ -1,10 +1,10 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
 import { simplePlural } from "../shared";
 import { getUserActiveEmoji } from "../models/emoji";
 
 export const command: DiscordCommand = {
-  command: new SlashCommandBuilder()
+  command: new SlashCommandSubcommandBuilder()
     .setName("list")
     .setDescription("Lists all the emoji you own on the server."),
   execute: async (interaction, tx) => {
