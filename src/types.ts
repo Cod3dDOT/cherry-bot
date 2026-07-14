@@ -3,17 +3,17 @@ import {
   ChatInputCommandInteraction,
   SlashCommandSubcommandBuilder,
 } from "discord.js";
-import { EmojiStatus, Prisma } from "./generated/prisma/client";
+import { EmojiStatus, PrismaClient } from "./generated/prisma/client";
 
 export interface DiscordCommand {
   command: SlashCommandSubcommandBuilder;
   execute: (
     interaction: ChatInputCommandInteraction,
-    tx: Prisma.TransactionClient,
+    prisma: PrismaClient,
   ) => Promise<void>;
   autocomplete?: (
     interaction: AutocompleteInteraction,
-    tx: Prisma.TransactionClient,
+    prisma: PrismaClient,
   ) => Promise<void>;
 }
 

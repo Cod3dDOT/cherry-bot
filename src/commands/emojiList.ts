@@ -7,7 +7,7 @@ export const command: DiscordCommand = {
   command: new SlashCommandSubcommandBuilder()
     .setName("list")
     .setDescription("Lists all the emoji you own on the server."),
-  execute: async (interaction, tx) => {
+  execute: async (interaction, prisma) => {
     await interaction.deferReply({ flags: ["Ephemeral"] });
 
     const guildId = interaction.guildId;
@@ -29,7 +29,7 @@ export const command: DiscordCommand = {
       return;
     }
 
-    const emojis = await getUserActiveEmoji(tx, guildId, userId);
+    const emojis = await getUserActiveEmoji(prisma, guildId, userId);
 
     if (emojis.length === 0) {
       await interaction.editReply({

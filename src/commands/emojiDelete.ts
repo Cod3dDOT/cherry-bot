@@ -18,7 +18,7 @@ export const command: DiscordCommand = {
         .setRequired(true)
         .setAutocomplete(true),
     ),
-  execute: async (interaction, tx) => {
+  execute: async (interaction, prisma) => {
     await interaction.deferReply({ flags: ["Ephemeral"] });
 
     const guildId = interaction.guildId;
@@ -60,25 +60,28 @@ export const command: DiscordCommand = {
       return;
     }
 
-    const ownerId = await getEmojiOwner(tx, discordEmoji.id);
+    const ownerId = await getEmojiOwner(prisma, discordEmoji.id);
 
     if (ownerId === userId) {
       // Run this first in case in fails so we fail fast.
       await discordEmoji.delete();
-      // We don't actually delete emoji for auditing reasons if someone does something bad.
-      // In `models/emoji.ts`, you can see how we add filters for the most recent status being "Ok".
-      // The other statuses are just reasons the emoji was deleted.
-      // @TODO could be, for example, to let users "restore" emojis they deleted or that expired.
-      await pushEmojiStatus(tx, discordEmoji.id, userId, "UserDeleted");
 
-      // Record an audit event so we know what happened
-      await recordAuditEvent(
-        tx,
-        guildId,
-        userId,
-        `emoji::delete(<:${discordEmoji.name}:${discordEmoji.id}>)`,
-        interaction.channelId,
-      );
+      await prisma.$transaction(async (tx) => {
+        // We don't actually delete emoji for auditing reasons if someone does something bad.
+        // In `models/emoji.ts`, you can see how we add filters for the most recent status being "Ok".
+        // The other statuses are just reasons the emoji was deleted.
+        // @TODO could be, for example, to let users "restore" emojis they deleted or that expired.
+        await pushEmojiStatus(tx, discordEmoji.id, userId, "UserDeleted");
+
+        // Record an audit event so we know what happened
+        await recordAuditEvent(
+          tx,
+          guildId,
+          userId,
+          `emoji::delete(<:${discordEmoji.name}:${discordEmoji.id}>)`,
+          interaction.channelId,
+        );
+      });
 
       await interaction.editReply({
         content: "Successfully deleted the emoji!",
@@ -92,7 +95,7 @@ export const command: DiscordCommand = {
     }
   },
 
-  autocomplete: async (interaction, tx) => {
+  autocomplete: async (interaction, prisma) => {
     const guildId = interaction.guildId;
 
     if (guildId === null || interaction.guild === null) {
@@ -103,7 +106,7 @@ export const command: DiscordCommand = {
     const focused = interaction.options.getFocused().toLowerCase();
 
     const userEmoji = await getUserActiveEmoji(
-      tx,
+      prisma,
       guildId,
       interaction.user.id,
     );

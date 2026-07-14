@@ -22,7 +22,7 @@ export const command: DiscordCommand = {
         .setDescription("The name for the emoji.")
         .setRequired(true),
     ),
-  execute: async (interaction, tx) => {
+  execute: async (interaction, prisma) => {
     await interaction.deferReply({ flags: ["Ephemeral"] });
 
     const guildId = interaction.guildId;
@@ -63,8 +63,8 @@ export const command: DiscordCommand = {
     }
 
     // Does the user have enough slots to create this emoji?
-    const emojiPerUserLimit = await upsertEmojiLimit(tx, guildId);
-    const userActiveEmoji = await countUserActiveEmoji(tx, guildId, userId);
+    const emojiPerUserLimit = await upsertEmojiLimit(prisma, guildId);
+    const userActiveEmoji = await countUserActiveEmoji(prisma, guildId, userId);
 
     if (userActiveEmoji >= emojiPerUserLimit) {
       await interaction.editReply({
@@ -94,29 +94,33 @@ export const command: DiscordCommand = {
       const cloudflareId = `emoji/${emoji.id}.${attachment.contentType.split("/")[1]}`;
       await uploadDiscordAttachment(attachment, cloudflareId);
 
-      // Persist the emoji to the database
-      await createEmoji(
-        tx,
-        guildId,
-        userId,
-        emoji.id,
-        cloudflareId,
-        interaction.channelId,
-      );
+      prisma.$transaction(async (tx) => {
+        // Persist the emoji to the database
+        await createEmoji(
+          tx,
+          guildId,
+          userId,
+          emoji.id,
+          cloudflareId,
+          interaction.channelId,
+        );
 
-      // Record an audit event so we know what happened
-      await recordAuditEvent(
-        tx,
-        guildId,
-        userId,
-        `emoji::create(<:${emojiName}:${emoji.id}>)`,
-        interaction.channelId,
-      );
+        // Record an audit event so we know what happened
+        await recordAuditEvent(
+          tx,
+          guildId,
+          userId,
+          `emoji::create(<:${emojiName}:${emoji.id}>)`,
+          interaction.channelId,
+        );
+      });
     } catch (e) {
       // The emoji exists in Discord, but we couldn't persist it to DB or to Cloudflare.
-      // Unwind and rethrow the error to abort the transaction.
+      // Prisma will unwind the transaction automatically, if it executed.
       await emoji.delete();
-      throw e;
+      await interaction.editReply({
+        content: `There was an error creating the emoji. @DEBUG ${e}`,
+      });
     }
 
     await interaction.editReply({

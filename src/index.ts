@@ -34,12 +34,10 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
     if (autocomplete === undefined) {
       await interaction.respond([]);
-      return;
+    } else {
+      await autocomplete(interaction, prisma);
     }
-
-    await prisma.$transaction(async (tx) => {
-      await autocomplete(interaction, tx);
-    });
+    
     return;
   }
 
@@ -53,9 +51,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         content: "A command with that name does not exist!",
       });
     } else {
-      await prisma.$transaction(async (tx) => {
-        await execute(interaction, tx);
-      });
+      await execute(interaction, prisma);
     }
 
     return;
