@@ -16,14 +16,20 @@ export async function getUserActiveEmoji(
         take: 1,
         select: { status: true },
       },
+      // @TODO: I currently store data for other servers where CherryBot might be used.
+      // A cool statistic later on might be "foreign" uses of an emoji or something.
+      // Anyway, that's why I filter to match the guildId like I do.
       usageEvents: {
         orderBy: { eventId: "desc" },
         take: 1,
         select: { timestamp: true },
+        where: { guildId },
       },
       _count: {
         select: {
-          usageEvents: true,
+          usageEvents: {
+            where: { guildId },
+          },
         },
       },
     },
@@ -80,7 +86,7 @@ export async function pushEmojiStatus(
   tx: Prisma.TransactionClient,
   emojiId: string,
   userId: string,
-  newStatus: EmojiStatus
+  newStatus: EmojiStatus,
 ) {
   // You could also do this through the emoji model
   await tx.emojiStatusEvent.create({
@@ -119,6 +125,24 @@ export async function createEmoji(
           channelId,
         },
       },
+    },
+  });
+}
+
+export async function pushEmojiUsage(
+  tx: Prisma.TransactionClient,
+  emojiId: string,
+  userId: string,
+  guildId: string,
+  channelId: string,
+) {
+  // You could also do this through the emoji model
+  await tx.emojiUsageEvent.create({
+    data: {
+      emojiId,
+      userId,
+      guildId,
+      channelId,
     },
   });
 }

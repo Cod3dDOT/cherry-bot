@@ -1,8 +1,15 @@
 import "dotenv/config";
 
-import { Client, Events, GatewayIntentBits, Interaction } from "discord.js";
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  Interaction,
+  Partials,
+} from "discord.js";
 import { commands } from "./commands";
 import { prisma } from "./shared";
+import { pushEmojiUsage } from "./models/emoji";
 const client = new Client({
   intents: [
     // Lets us recieve information about channels, roles, messages
@@ -18,9 +25,13 @@ const client = new Client({
     // This lets us clean up emojis when a user joins or leaves the server.
     GatewayIntentBits.GuildMembers,
 
-    // This intent lets us create and manage emoji for the server
+    // This intent lets us create and manage emoji for the server.
     GatewayIntentBits.GuildExpressions,
+
+    // This intent lets us listen for message reactions.
+    GatewayIntentBits.GuildMessageReactions,
   ],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 client.once(Events.ClientReady, (readyClient) => {
@@ -37,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     } else {
       await autocomplete(interaction, prisma);
     }
-    
+
     return;
   }
 
@@ -55,6 +66,78 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     }
 
     return;
+  }
+});
+
+const CUSTOM_EMOJI_REGEX = /<a?:[^:>]+:(\d+)>/g;
+client.on(Events.MessageCreate, async (message) => {
+  // Ignore DMs and bots
+  if (!message.guildId || message.author.bot) {
+    return;
+  }
+
+  const emojiIds = [...message.content.matchAll(CUSTOM_EMOJI_REGEX)].map(
+    (match) => match[1],
+  );
+
+  for (const emojiId of emojiIds) {
+    try {
+      await pushEmojiUsage(
+        prisma,
+        emojiId,
+        message.author.id,
+        message.guildId,
+        message.channelId,
+      );
+    } catch (e) {
+      console.error(
+        `Could not add emoji usage - author: ${message.author.id}, server: ${message.guildId}, channel: ${message.channelId}, emoji: ${emojiId} - ${e}`,
+      );
+    }
+  }
+});
+
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  // Ignore bots
+  if (user.bot) {
+    return;
+  }
+
+  if (reaction.partial) {
+    try {
+      await reaction.fetch();
+    } catch (e) {
+      console.error("Failed to fetch reaction:", e);
+      return;
+    }
+  }
+
+  const message = reaction.message;
+
+  // Ignore DMs
+  if (!message.guildId) {
+    return;
+  }
+
+  const emojiId = reaction.emoji.id;
+
+  // Unicode emoji don't have an ID. Custom Discord emoji do.
+  if (!emojiId) {
+    return;
+  }
+
+  try {
+    await pushEmojiUsage(
+      prisma,
+      emojiId,
+      user.id,
+      message.guildId,
+      message.channelId,
+    );
+  } catch (e) {
+    console.error(
+      `Could not add emoji usage - author: ${user.id}, server: ${message.guildId}, channel: ${message.channelId}, emoji: ${emojiId} - ${e}`,
+    );
   }
 });
 
