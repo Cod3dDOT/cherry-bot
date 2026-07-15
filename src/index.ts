@@ -104,9 +104,7 @@ client.on(Events.MessageCreate, async (message) => {
         message.channelId,
       );
     } catch (e) {
-      console.error(
-        `Could not add emoji usage - author: ${message.author.id}, server: ${message.guildId}, channel: ${message.channelId}, emoji: ${emojiId} - ${e}`,
-      );
+      // Do nothing. This will throw, for example, on foreign key violations.
     }
   }
 });
@@ -149,9 +147,8 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
       message.channelId,
     );
   } catch (e) {
-    console.error(
-      `Could not add emoji usage - author: ${user.id}, server: ${message.guildId}, channel: ${message.channelId}, emoji: ${emojiId} - ${e}`,
-    );
+    // Do nothing. This will throw, for example, on foreign key violations.
+    // For example, if you use an emoji from another server or one that CherryBot isn't responsible for managing.
   }
 });
 
