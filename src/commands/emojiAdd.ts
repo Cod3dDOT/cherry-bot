@@ -84,7 +84,7 @@ export const command: DiscordCommand = {
     } catch (e) {
       // TODO: what if I give a collided name, an invalid name, etc?
       await interaction.editReply({
-        content: `There was an error creating the emoji. @DEBUG ${e}`,
+        content: "There was an error creating the emoji.",
       });
       return;
     }
@@ -119,7 +119,7 @@ export const command: DiscordCommand = {
       // Prisma will unwind the transaction automatically, if it executed.
       await emoji.delete();
       await interaction.editReply({
-        content: `There was an error creating the emoji. @DEBUG ${e}`,
+        content: "There was an error creating the emoji.",
       });
       return;
     }
