@@ -1,6 +1,6 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
-import { simplePlural } from "../shared";
+import { referenceEmoji, simplePlural } from "../shared";
 import { getUserActiveEmoji } from "../models/emoji";
 
 export const command: DiscordCommand = {
@@ -42,16 +42,15 @@ export const command: DiscordCommand = {
         // Get time returns milliseconds
         const lastUsageUnixTime = Math.floor(emoji.lastUsage.getTime() / 1000);
 
-        // Arguably, this could be dropped since Discord seems to resolve just fine when I use
+        // Arguably, this could be dropped since Discord seems to resolve just fine without this info
         const discordEmoji = await interaction.guild?.emojis.fetch(
           emoji.emojiId,
-        );
-        const animated = discordEmoji?.animated ? "a" : "";
-        const name = discordEmoji?.name ?? "ACustomEmoji";
-
+        );        
+        const emojiRef = referenceEmoji({ emojiId: emoji.emojiId, animated: discordEmoji?.animated, name: discordEmoji?.name});
+        
         // `<t:${lastUsageUnixTime}:d>` gives the last used time in the user's locale as a short date string.
         // We could use `:f` instead for a form like "6/21/26 at 9:26am"
-        msg += `- <${animated}:${name}:${emoji.emojiId}> - Last used <t:${lastUsageUnixTime}:d> (${emoji.usageCount} ${simplePlural("time", emoji.usageCount)} total)\n`;
+        msg += `- ${emojiRef} - Last used <t:${lastUsageUnixTime}:d> (${emoji.usageCount} ${simplePlural("time", emoji.usageCount)} total)\n`;
       }
       await interaction.editReply({ content: msg });
     }

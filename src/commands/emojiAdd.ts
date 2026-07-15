@@ -1,6 +1,6 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
-import { simplePlural } from "../shared";
+import { referenceEmoji, simplePlural } from "../shared";
 import { upsertEmojiLimit } from "../models/guild";
 import { countUserActiveEmoji, createEmoji } from "../models/emoji";
 import { uploadDiscordAttachment } from "../s3";
@@ -124,8 +124,14 @@ export const command: DiscordCommand = {
       return;
     }
 
+    const emojiRef = referenceEmoji({
+      emojiId: emoji.id,
+      animated: emoji.animated,
+      name: emoji.name,
+    });
+
     await interaction.editReply({
-      content: `:${emoji.name}: (<:${emoji.name}:>) is now an emoji. Use it wisely.`,
+      content: `${emojiRef} (\`<:${emoji.name}:>\`) is now an emoji. Use it wisely.`,
     });
   },
 };
