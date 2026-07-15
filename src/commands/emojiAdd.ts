@@ -121,10 +121,11 @@ export const command: DiscordCommand = {
       await interaction.editReply({
         content: `There was an error creating the emoji. @DEBUG ${e}`,
       });
+      return;
     }
 
     await interaction.editReply({
-      content: `:${emoji.name}: is now an emoji. Use it wisely.`,
+      content: `:${emoji.name}: (<:${emoji.name}:>) is now an emoji. Use it wisely.`,
     });
   },
 };
