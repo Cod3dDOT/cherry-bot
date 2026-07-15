@@ -18,7 +18,7 @@ export const command = new SlashCommandBuilder()
   );
 
 export const commands: Record<string, DiscordCommand | undefined> = {
-  [`emoji:${emojiAdd.command.name}`]: emojiAdd,
-  [`emoji:${emojiDelete.command.name}`]: emojiDelete,
-  [`emoji:${emojiList.command.name}`]: emojiList,
+  [`cherry:emoji:${emojiAdd.command.name}`]: emojiAdd,
+  [`cherry:emoji:${emojiDelete.command.name}`]: emojiDelete,
+  [`cherry:emoji:${emojiList.command.name}`]: emojiList,
 };

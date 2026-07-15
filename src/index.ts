@@ -39,8 +39,22 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+  // If we add more commands, I'd definitely want to move towards an actual router
+
+  if (!(interaction.isAutocomplete() || interaction.isChatInputCommand())) {
+    // I have no idea, man
+    return;
+  }
+  // ... gives a nice type assertion, though!
+
+  const commandName = interaction.commandName;
+  const subcommand = interaction.options.getSubcommand(false);
+  const subcommandGroup = interaction.options.getSubcommandGroup(false);
+
+  const routingKey = `${commandName}:${subcommandGroup}:${subcommand}`;
+
   if (interaction.isAutocomplete()) {
-    const command = commands[interaction.commandName];
+    const command = commands[routingKey];
     const autocomplete = command?.autocomplete;
 
     if (autocomplete === undefined) {
@@ -53,7 +67,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   }
 
   if (interaction.isChatInputCommand()) {
-    const command = commands[interaction.commandName];
+    const command = commands[routingKey];
     const execute = command?.execute;
 
     if (execute === undefined) {
