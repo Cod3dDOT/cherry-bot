@@ -12,10 +12,12 @@ const s3 = new S3Client({
 });
 
 export async function uploadDiscordAttachment(
-  attachment: Attachment,
+  attachment: Attachment | string,
   key: string,
 ): Promise<void> {
-  const response = await fetch(attachment.url);
+  const response = await fetch(
+    typeof attachment === "string" ? attachment : attachment.url,
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -32,7 +34,7 @@ export async function uploadDiscordAttachment(
       Body: body,
       ContentType:
         // @TODO: Stop blindly trusting `attachment.contentType`
-        attachment.contentType ??
+        (typeof attachment === "string" ? undefined : attachment.contentType) ??
         response.headers.get("content-type") ??
         "application/octet-stream",
     }),

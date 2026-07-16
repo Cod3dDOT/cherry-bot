@@ -5,6 +5,7 @@ import { command as emojiAdd } from "./emojiAdd";
 import { command as emojiDelete } from "./emojiDelete";
 import { command as emojiList } from "./emojiList";
 import { command as emojiStats } from "./emojiStats";
+import { command as emojiAttach } from "./emojiAttach";
 
 export const command = new SlashCommandBuilder()
   .setName("cherry")
@@ -17,6 +18,7 @@ export const command = new SlashCommandBuilder()
       .addSubcommand(emojiDelete.command)
       .addSubcommand(emojiList.command)
       .addSubcommand(emojiStats.command)
+      .addSubcommand(emojiAttach.command),
   );
 
 export const commands: Record<string, DiscordCommand | undefined> = {
@@ -24,4 +26,5 @@ export const commands: Record<string, DiscordCommand | undefined> = {
   [`cherry:emoji:${emojiDelete.command.name}`]: emojiDelete,
   [`cherry:emoji:${emojiList.command.name}`]: emojiList,
   [`cherry:emoji:${emojiStats.command.name}`]: emojiStats,
+  [`cherry:emoji:${emojiAttach.command.name}`]: emojiAttach,
 };
