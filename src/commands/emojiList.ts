@@ -1,6 +1,6 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
 import { DiscordCommand } from "../types";
-import { referenceEmoji, simplePlural } from "../shared";
+import { referenceEmoji, sendPagedReply, simplePlural } from "../shared";
 import { getUserActiveEmoji } from "../models/emoji";
 
 export const command: DiscordCommand = {
@@ -43,32 +43,41 @@ export const command: DiscordCommand = {
 
     if (emojis.length === 0) {
       const target = forSelf ? "You don't" : `<@${userId}> doesn't`;
-      const trailer = forSelf ? ` Try creating one with \`/cherry emoji add\`!` : "";
+      const trailer = forSelf
+        ? ` Try creating one with \`/cherry emoji add\`!`
+        : "";
       await interaction.editReply({
         content: `${target} have any emoji yet.${trailer}`,
       });
     } else {
       const target = forSelf ? "You have" : `<@${userId}> has`;
-      let msg = `${target} the following emoji in this server:\n`;
-      for (let emoji of emojis) {
-        // Get time returns milliseconds
-        const lastUsageUnixTime = Math.floor(emoji.lastUsage.getTime() / 1000);
+      await sendPagedReply(
+        interaction,
+        true,
+        `${target} the following emoji in this server:\n`,
+        await Promise.all(
+          emojis.map(async (emoji) => {
+            // Get time returns milliseconds
+            const lastUsageUnixTime = Math.floor(
+              emoji.lastUsage.getTime() / 1000,
+            );
 
-        // Arguably, this could be dropped since Discord seems to resolve just fine without this info
-        const discordEmoji = await interaction.guild?.emojis.fetch(
-          emoji.emojiId,
-        );
-        const emojiRef = referenceEmoji({
-          emojiId: emoji.emojiId,
-          animated: discordEmoji?.animated,
-          name: discordEmoji?.name,
-        });
+            // Arguably, this could be dropped since Discord seems to resolve just fine without this info
+            const discordEmoji = await interaction.guild?.emojis.fetch(
+              emoji.emojiId,
+            );
+            const emojiRef = referenceEmoji({
+              emojiId: emoji.emojiId,
+              animated: discordEmoji?.animated,
+              name: discordEmoji?.name,
+            });
 
-        // `<t:${lastUsageUnixTime}:d>` gives the last used time in the user's locale as a short date string.
-        // We could use `:f` instead for a form like "6/21/26 at 9:26am"
-        msg += `- ${emojiRef} - Last used <t:${lastUsageUnixTime}:d> (${emoji.usageCount} ${simplePlural("time", emoji.usageCount)} total)\n`;
-      }
-      await interaction.editReply({ content: msg });
+            // `<t:${lastUsageUnixTime}:d>` gives the last used time in the user's locale as a short date string.
+            // We could use `:f` instead for a form like "6/21/26 at 9:26am"
+            return `- ${emojiRef} - Last used <t:${lastUsageUnixTime}:d> (${emoji.usageCount} ${simplePlural("time", emoji.usageCount)} total)\n`;
+          }),
+        ),
+      );
     }
   },
 };
