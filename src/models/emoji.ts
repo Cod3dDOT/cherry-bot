@@ -1,16 +1,16 @@
 import { EmojiStatus, Prisma } from "../generated/prisma/client";
 import { Emoji } from "../types";
 
-export async function getUserActiveEmoji(
+async function getActiveEmoji(
   tx: Prisma.TransactionClient,
   guildId: string,
-  userId: string,
+  userId?: string,
 ): Promise<Emoji[]> {
   const emoji = await tx.emoji.findMany({
     where: { guildId, userId },
     select: {
       emojiId: true,
-      cloudflareId: true,
+      userId: true,
       statusEvents: {
         orderBy: { eventId: "desc" },
         take: 1,
@@ -38,8 +38,8 @@ export async function getUserActiveEmoji(
   return (
     emoji
       .map((e) => ({
+        userId: e.userId,
         emojiId: e.emojiId,
-        cloudflareId: e.cloudflareId,
         status: e.statusEvents.at(0)?.status,
         usageCount: e._count.usageEvents,
         lastUsage: e.usageEvents.at(0)?.timestamp,
@@ -52,6 +52,21 @@ export async function getUserActiveEmoji(
       // I'd do this with an `ORDER BY` but Prisma doesn't support `WHERE` + `ORDER BY`
       .sort((a, b) => b.usageCount - a.usageCount)
   );
+}
+
+export async function getUserActiveEmoji(
+  tx: Prisma.TransactionClient,
+  guildId: string,
+  userId?: string,
+) {
+  return await getActiveEmoji(tx, guildId, userId);
+}
+
+export async function getServerActiveEmoji(
+  tx: Prisma.TransactionClient,
+  guildId: string
+) {
+  return await getActiveEmoji(tx, guildId);
 }
 
 export async function getEmojiOwner(

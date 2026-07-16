@@ -19,7 +19,7 @@ export interface DiscordCommand {
 
 export interface Emoji {
   emojiId: string;
-  cloudflareId: string;
+  userId: string;
   status: EmojiStatus;
   usageCount: 0;
   lastUsage: Date;
