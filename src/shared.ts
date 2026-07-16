@@ -1,6 +1,8 @@
 import { PrismaClient } from "./generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
+export const CHERRY_BOT_USERID = "1525906719945916527";
+
 const DB_URL = process.env.DATABASE_URL;
 if (DB_URL === undefined)
   throw "DATABASE_URL environment variable was not specified!";

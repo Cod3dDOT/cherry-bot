@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { REST, Routes } from "discord.js";
 import { command } from "../src/commands";
+import { CHERRY_BOT_USERID } from "../src/shared";
 
-const APP_ID = "1525906719945916527";
 const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
 
 (async () => {
@@ -10,7 +10,7 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
     console.log("Started refreshing the application (/) commands!");
 
     // The put method is used to fully refresh all commands in the guild with the current set
-    const data = await rest.put(Routes.applicationCommands(APP_ID), {
+    const data = await rest.put(Routes.applicationCommands(CHERRY_BOT_USERID), {
       body: [command],
     });
 

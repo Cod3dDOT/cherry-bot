@@ -29,10 +29,10 @@ export async function getUserActiveEmoji(
         select: {
           usageEvents: {
             where: { guildId },
-          },
-        },
-      },
-    },
+          }
+        }
+      }
+    }
   });
 
   return (
@@ -49,6 +49,8 @@ export async function getUserActiveEmoji(
       })
       // Yeah, this could be merged with the previous filter, but that blurs the line a bit for what
       .filter((e) => e.status === "Ok")
+      // I'd do this with an `ORDER BY` but Prisma doesn't support `WHERE` + `ORDER BY`
+      .sort((a, b) => b.usageCount - a.usageCount)
   );
 }
 

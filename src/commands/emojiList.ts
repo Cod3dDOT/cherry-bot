@@ -6,12 +6,22 @@ import { getUserActiveEmoji } from "../models/emoji";
 export const command: DiscordCommand = {
   command: new SlashCommandSubcommandBuilder()
     .setName("list")
-    .setDescription("Lists all the emoji you own on the server."),
+    .setDescription("Lists all the emoji you own on the server.")
+    .addUserOption((opt) =>
+      opt
+        .setName("user")
+        .setDescription(
+          "Which user to list the emojis of. Defaults to yourself",
+        ),
+    ),
   execute: async (interaction, prisma) => {
     await interaction.deferReply({ flags: ["Ephemeral"] });
 
     const guildId = interaction.guildId;
-    const userId = interaction.user.id;
+    const forSelf =
+      interaction.options.getUser("user")?.id === interaction.user.id;
+    const userId =
+      interaction.options.getUser("user")?.id ?? interaction.user.id;
 
     if (guildId === null) {
       // For example, are we in DMs?
@@ -32,12 +42,14 @@ export const command: DiscordCommand = {
     const emojis = await getUserActiveEmoji(prisma, guildId, userId);
 
     if (emojis.length === 0) {
+      const target = forSelf ? "You don't" : `<@${userId}> doesn't`;
+      const trailer = forSelf ? ` Try creating one with \`/cherry emoji add\`!` : "";
       await interaction.editReply({
-        content:
-          "You don't have any emoji yet. Try creating one with `/cherry emoji add`!",
+        content: `${target} have any emoji yet.${trailer}`,
       });
     } else {
-      let msg = "You have the following emoji in this server:\n";
+      const target = forSelf ? "You have" : `<@${userId}> has`;
+      let msg = `${target} the following emoji in this server:\n`;
       for (let emoji of emojis) {
         // Get time returns milliseconds
         const lastUsageUnixTime = Math.floor(emoji.lastUsage.getTime() / 1000);
@@ -45,9 +57,13 @@ export const command: DiscordCommand = {
         // Arguably, this could be dropped since Discord seems to resolve just fine without this info
         const discordEmoji = await interaction.guild?.emojis.fetch(
           emoji.emojiId,
-        );        
-        const emojiRef = referenceEmoji({ emojiId: emoji.emojiId, animated: discordEmoji?.animated, name: discordEmoji?.name});
-        
+        );
+        const emojiRef = referenceEmoji({
+          emojiId: emoji.emojiId,
+          animated: discordEmoji?.animated,
+          name: discordEmoji?.name,
+        });
+
         // `<t:${lastUsageUnixTime}:d>` gives the last used time in the user's locale as a short date string.
         // We could use `:f` instead for a form like "6/21/26 at 9:26am"
         msg += `- ${emojiRef} - Last used <t:${lastUsageUnixTime}:d> (${emoji.usageCount} ${simplePlural("time", emoji.usageCount)} total)\n`;
