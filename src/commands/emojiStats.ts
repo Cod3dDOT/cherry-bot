@@ -1,5 +1,5 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
-import { getServerActiveEmoji, getUserActiveEmoji } from "../models/emoji";
+import { getServerActiveEmoji } from "../models/emoji";
 import { referenceEmoji, sendPagedReply, simplePlural } from "../shared";
 import type { DiscordCommand } from "../types";
 

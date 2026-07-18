@@ -1,4 +1,4 @@
-import { SlashCommandSubcommandBuilder } from "discord.js";
+import { type GuildEmoji, SlashCommandSubcommandBuilder } from "discord.js";
 import { recordAuditEvent } from "../models/audit";
 import { countUserActiveEmoji, createEmoji } from "../models/emoji";
 import { upsertEmojiLimit } from "../models/guild";
@@ -74,7 +74,7 @@ export const command: DiscordCommand = {
     }
 
     // Try to create the emoji
-    let emoji;
+    let emoji: GuildEmoji;
     try {
       // assert `guild` because if the guild doesn't exist, that's also a problem!
       emoji = await interaction.guild!.emojis.create({
@@ -114,7 +114,7 @@ export const command: DiscordCommand = {
           interaction.channelId,
         );
       });
-    } catch (e) {
+    } catch (_) {
       // The emoji exists in Discord, but we couldn't persist it to DB or to Cloudflare.
       // Prisma will unwind the transaction automatically, if it executed.
       await emoji.delete();

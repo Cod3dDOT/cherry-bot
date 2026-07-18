@@ -45,7 +45,7 @@ async function getActiveEmoji(
         lastUsage: e.usageEvents.at(0)?.timestamp,
       }))
       .filter((e): e is Emoji => {
-        return !(e.lastUsage == undefined || e.status == undefined);
+        return !(e.lastUsage === undefined || e.status === undefined);
       })
       // Yeah, this could be merged with the previous filter, but that blurs the line a bit for what
       .filter((e) => e.status === "Ok")

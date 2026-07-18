@@ -104,7 +104,7 @@ client.on(Events.MessageCreate, async (message) => {
         message.guildId,
         message.channelId,
       );
-    } catch (e) {
+    } catch (_) {
       // Do nothing. This will throw, for example, on foreign key violations.
     }
   }
@@ -147,7 +147,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
       message.guildId,
       message.channelId,
     );
-  } catch (e) {
+  } catch (_) {
     // Do nothing. This will throw, for example, on foreign key violations.
     // For example, if you use an emoji from another server or one that CherryBot isn't responsible for managing.
   }
