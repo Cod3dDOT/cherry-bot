@@ -1,10 +1,10 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
-import { DiscordCommand } from "../types";
-import { referenceEmoji, simplePlural } from "../shared";
-import { upsertEmojiLimit } from "../models/guild";
-import { countUserActiveEmoji, createEmoji } from "../models/emoji";
-import { uploadDiscordAttachment } from "../s3";
 import { recordAuditEvent } from "../models/audit";
+import { countUserActiveEmoji, createEmoji } from "../models/emoji";
+import { upsertEmojiLimit } from "../models/guild";
+import { uploadDiscordAttachment } from "../s3";
+import { referenceEmoji, simplePlural } from "../shared";
+import type { DiscordCommand } from "../types";
 
 export const command: DiscordCommand = {
   command: new SlashCommandSubcommandBuilder()

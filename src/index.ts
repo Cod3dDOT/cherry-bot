@@ -4,12 +4,13 @@ import {
   Client,
   Events,
   GatewayIntentBits,
-  Interaction,
+  type Interaction,
   Partials,
 } from "discord.js";
 import { commands } from "./commands";
-import { prisma } from "./shared";
 import { pushEmojiUsage } from "./models/emoji";
+import { prisma } from "./shared";
+
 const client = new Client({
   intents: [
     // Lets us recieve information about channels, roles, messages
